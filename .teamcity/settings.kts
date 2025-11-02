@@ -71,6 +71,10 @@ object Build : BuildType({
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
+                sudo apt-get update
+                sudo apt-get install -y jq
+                
+                
                 mkdir -p cache
                 if [ ! -f %env.CACHE_MAP% ]; then
                   echo "{}" > %env.CACHE_MAP%
