@@ -130,4 +130,11 @@ object Build : BuildType({
         perfmon {
         }
     }
+
+    dependencies {
+        artifacts(RelativeId("Build")) {
+            buildRule = lastSuccessful()
+            artifactRules = "cache/cache.json => cache/cache.json"
+        }
+    }
 })
