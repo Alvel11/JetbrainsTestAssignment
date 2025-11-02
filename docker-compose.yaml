@@ -12,15 +12,26 @@ services:
     image: jetbrains/teamcity-server
     ports:
       - "8111:8111"
+    environment:
+      - TEAMCITY_SERVER_MEM_OPTS=-Xmx512m -Xms256m
     volumes:
       - ./data/server:/data/teamcity_server/datadir
       - ./logs/server:/opt/teamcity/logs
+    deploy:
+      resources:
+        limits:
+          memory: 1g
 
   teamcity-agent:
     image: jetbrains/teamcity-agent
     environment:
       - SERVER_URL=http://teamcity-server:8111
+      - TEAMCITY_AGENT_MEM_OPTS=-Xmx512m -Xms256m
     depends_on:
       - teamcity-server
     volumes:
       - ./data/agent:/data/teamcity_agent/conf
+    deploy:
+      resources:
+        limits:
+          memory: 1g
