@@ -37,7 +37,7 @@ object Build : BuildType({
     name = "Build"
 
     artifactRules = """
-        cache/cache.json
+        cache/
         releases/
     """.trimIndent()
 
