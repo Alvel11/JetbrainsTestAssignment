@@ -72,24 +72,6 @@ object Build : BuildType({
             scriptContent = "tar -czf javadoc.tar.gz -C target/dokkaJavadoc ."
         }
         script {
-            name = "DownloadJq"
-            id = "DownloadJq"
-            scriptContent = """
-                INSTALL_DIR="${'$'}HOME/bin"
-                mkdir -p "${'$'}INSTALL_DIR"
-                
-                
-                JQ_URL="https://github.com/stedolan/jq/releases/download/jq-1.8.1/jq-linux64"
-                curl -L -o "${'$'}INSTALL_DIR/jq" "${'$'}JQ_URL"
-                
-                chmod +x "${'$'}INSTALL_DIR/jq"
-                
-                export PATH="${'$'}INSTALL_DIR:${'$'}PATH"
-                
-                jq --version
-            """.trimIndent()
-        }
-        script {
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
