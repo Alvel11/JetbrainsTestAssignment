@@ -72,6 +72,22 @@ object Build : BuildType({
             scriptContent = "tar -czf javadoc.tar.gz -C target/dokkaJavadoc ."
         }
         script {
+            name = "DownloadJq"
+            id = "DownloadJq"
+            scriptContent = """
+                INSTALL_DIR="${'$'}HOME/bin"
+                
+                JQ_URL="https://github.com/stedolan/jq/releases/download/jq-1.8.1/jq-linux64"
+                curl -L -o "${'$'}INSTALL_DIR/jq" "${'$'}JQ_URL"
+                
+                chmod +x "${'$'}INSTALL_DIR/jq"
+                
+                export PATH="${'$'}INSTALL_DIR:${'$'}PATH"
+                
+                jq --version
+            """.trimIndent()
+        }
+        script {
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
@@ -111,22 +127,6 @@ object Build : BuildType({
                   echo "Website unavailable, storing null in cache"
                   jq --arg commit %git.commit.hash% '. + {(${'$'}commit): null}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
                 fi
-            """.trimIndent()
-        }
-        script {
-            name = "DownloadJq"
-            id = "DownloadJq"
-            scriptContent = """
-                INSTALL_DIR="${'$'}HOME/bin"
-                
-                JQ_URL="https://github.com/stedolan/jq/releases/download/jq-1.8.1/jq-linux64"
-                curl -L -o "${'$'}INSTALL_DIR/jq" "${'$'}JQ_URL"
-                
-                chmod +x "${'$'}INSTALL_DIR/jq"
-                
-                export PATH="${'$'}INSTALL_DIR:${'$'}PATH"
-                
-                jq --version
             """.trimIndent()
         }
     }
