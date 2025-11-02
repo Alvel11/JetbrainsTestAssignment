@@ -24,6 +24,11 @@ changeBuildType(RelativeId("Build")) {
         release-artifact.tar.gz
     """.trimIndent()
 
+    check(publishArtifacts == PublishMode.NORMALLY_FINISHED) {
+        "Unexpected option value: publishArtifacts = $publishArtifacts"
+    }
+    publishArtifacts = PublishMode.SUCCESSFUL
+
     expectSteps {
         script {
             name = "Checkout"
