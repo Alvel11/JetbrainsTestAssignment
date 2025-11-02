@@ -66,12 +66,6 @@ object Build : BuildType({
             goals = "dokka:javadoc"
         }
         script {
-            name = "JavadocArtifact"
-            id = "JavadocArtifact"
-            enabled = false
-            scriptContent = "tar -czf javadoc.tar.gz -C target/dokkaJavadoc ."
-        }
-        script {
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
