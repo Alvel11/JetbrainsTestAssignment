@@ -76,6 +76,8 @@ object Build : BuildType({
             id = "DownloadJq"
             scriptContent = """
                 INSTALL_DIR="${'$'}HOME/bin"
+                mkdir -p "${'$'}INSTALL_DIR"
+                
                 
                 JQ_URL="https://github.com/stedolan/jq/releases/download/jq-1.8.1/jq-linux64"
                 curl -L -o "${'$'}INSTALL_DIR/jq" "${'$'}JQ_URL"
