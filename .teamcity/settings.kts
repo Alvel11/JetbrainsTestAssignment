@@ -75,8 +75,8 @@ object Build : BuildType({
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
-                sudo apt-get update
-                sudo apt-get install -y jq
+                apt-get update
+                apt-get install -y jq
                 
                 
                 mkdir -p cache
