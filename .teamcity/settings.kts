@@ -91,7 +91,7 @@ object Build : BuildType({
                 fi
                 
                 CACHED_REFERENCE=${'$'}(jq -r --arg commit %git.commit.hash% '.[${'$'}commit] // empty' %env.CACHE_MAP%)
-                
+                echo "Cached reference: ${'$'}CACHED_REFERENCE"
                 
                 if [ "${'$'}CACHED_REFERENCE" != "" ]; then
                   # First case, artifact was first generated when the marketing website was not reachable
