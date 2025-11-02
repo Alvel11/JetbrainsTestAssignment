@@ -39,7 +39,9 @@ object Build : BuildType({
     artifactRules = """
         cache/
         releases/
+        release-artifact.tar.gz
     """.trimIndent()
+    publishArtifacts = PublishMode.SUCCESSFUL
 
     params {
         text("env.RELEASE_NOTES_URL", "http://nginx/release-notes.txt", readOnly = true, allowEmpty = true)
@@ -82,7 +84,7 @@ object Build : BuildType({
                 
                 jq --version
                 
-                mkdir -p cache releases
+                mkdir -p cache releases release-artifact
                 
                 
                 if [ ! -f %env.CACHE_MAP% ]; then
@@ -90,34 +92,46 @@ object Build : BuildType({
                   echo "{}" > %env.CACHE_MAP%
                 fi
                 
-                CACHED_REFERENCE=${'$'}(jq -r --arg commit %git.commit.hash% '.[${'$'}commit] // empty' %env.CACHE_MAP%)
+                CACHED_REFERENCE=${'$'}(jq -r --arg commit "%git.commit.hash%" '.[${'$'}commit] // empty' "%env.CACHE_MAP%")
                 echo "Cached reference: ${'$'}CACHED_REFERENCE"
                 
                 if [ "${'$'}CACHED_REFERENCE" != "" ]; then
                   # First case, artifact was first generated when the marketing website was not reachable
                   # No release notes are added to artifact to ensure reproducibility
                   if [ "${'$'}CACHED_REFERENCE" == "null" ]; then
-                    echo "Commit %git.commit.hash% cached without release notes."
-                    exit 0
+                    echo "Commit %git.commit.hash% found without release notes." 
+                
                   # Second case, artifact was already created and we have cached release notes for it
                   else
                     echo "Commit %git.commit.hash% found in cache, checksum: ${'$'}CACHED_REFERENCE"
-                    exit 0
+                    cp releases/${'$'}CACHED_REFERENCE.txt release-artifact/
+                    
+                  fi
+                  
+                else
+                  # Third case, first time of commit so no cache present, website available
+                  if curl -sf %env.RELEASE_NOTES_URL% -o tmp_release_notes.txt; then
+                    CHECKSUM=${'$'}(sha256sum tmp_release_notes.txt | awk '{print ${'$'}1}')
+                    echo "Downloaded release notes, checksum: ${'$'}CHECKSUM"
+                    jq --arg commit %git.commit.hash% --arg checksum "${'$'}CHECKSUM" '. + {(${'$'}commit): ${'$'}checksum}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
+                    cp tmp_release_notes.txt "releases/${'$'}CHECKSUM.txt"
+                    cp releases/${'$'}CHECKSUM.txt release-artifact/
+                
+                  # Fourth case, first time commit, website not available
+                  else
+                    echo "Website unavailable, storing null in cache"
+                    jq --arg commit %git.commit.hash% '. + {(${'$'}commit): null}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
                   fi
                 fi
                 
-                # Third case, first time of commit so no cache present, website available
-                if curl -sf %env.RELEASE_NOTES_URL% -o tmp_release_notes.txt; then
-                  CHECKSUM=${'$'}(sha256sum tmp_release_notes.txt | awk '{print ${'$'}1}')
-                  echo "Downloaded release notes, checksum: ${'$'}CHECKSUM"
-                  jq --arg commit %git.commit.hash% --arg checksum "${'$'}CHECKSUM" '. + {(${'$'}commit): ${'$'}checksum}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
-                  cp tmp_release_notes.txt "releases/${'$'}CHECKSUM.txt"
-                # Fourth case, first time commit, website not available
-                else
-                  echo "Website unavailable, storing null in cache"
-                  jq --arg commit %git.commit.hash% '. + {(${'$'}commit): null}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
-                fi
+                
+                # Move Javadoc to release artifact
+                
+                cp -r target/dokkaJavadoc/* release-artifact/
+                
+                tar --sort=name --mtime='1970-01-01' --owner=0 --group=0 --numeric-owner -czf release-artifact.tar.gz -C release-artifact .
             """.trimIndent()
+            param("teamcity.kubernetes.executor.pull.policy", "")
         }
     }
 
@@ -136,6 +150,7 @@ object Build : BuildType({
             buildRule = lastSuccessful()
             artifactRules = """
                 cache.json=>cache
+                *.txt=>releases
             """.trimIndent()
         }
     }
