@@ -36,7 +36,11 @@ project {
 object Build : BuildType({
     name = "Build"
 
-    artifactRules = "javadoc.tar.gz"
+    artifactRules = """
+        javadoc.tar.gz
+        cache/cache.json
+        releases/
+    """.trimIndent()
 
     params {
         text("env.RELEASE_NOTES_URL", "http://localhost:8081/release-notes.txt", readOnly = true, allowEmpty = true)
