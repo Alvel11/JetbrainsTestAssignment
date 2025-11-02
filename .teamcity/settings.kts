@@ -86,6 +86,7 @@ object Build : BuildType({
                 
                 
                 if [ ! -f %env.CACHE_MAP% ]; then
+                  echo "Cache not found"
                   echo "{}" > %env.CACHE_MAP%
                 fi
                 
