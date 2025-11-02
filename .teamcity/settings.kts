@@ -34,6 +34,10 @@ project {
 object Build : BuildType({
     name = "Build"
 
+    params {
+        param("git.commit.hash", "")
+    }
+
     vcs {
         root(DslContext.settingsRoot)
     }
