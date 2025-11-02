@@ -41,6 +41,7 @@ object Build : BuildType({
     params {
         text("env.RELEASE_NOTES_URL", "http://localhost:8081/release-notes.txt", readOnly = true, allowEmpty = true)
         text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = true)
+        param("env.CACHE_MAP", "cache/cache.json")
     }
 
     vcs {
