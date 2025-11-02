@@ -1,0 +1,26 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: marketing
+    ports:
+      - "8081:80"
+    volumes:
+      - ./marketing-page/release-notes.txt:/release-notes.txt:ro
+      - ./marketing-page/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  teamcity-server:
+    image: jetbrains/teamcity-server
+    ports:
+      - "8111:8111"
+    volumes:
+      - ./data/server:/data/teamcity_server/datadir
+      - ./logs/server:/opt/teamcity/logs
+
+  teamcity-agent:
+    image: jetbrains/teamcity-agent
+    environment:
+      - SERVER_URL=http://teamcity-server:8111
+    depends_on:
+      - teamcity-server
+    volumes:
+      - ./data/agent:/data/teamcity_agent/conf
