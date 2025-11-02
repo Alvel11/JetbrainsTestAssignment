@@ -56,7 +56,7 @@ object Build : BuildType({
         maven {
             name = "Javadoc"
             id = "Javadoc"
-            goals = "mvn dokka:javadoc"
+            goals = "dokka:javadoc"
         }
         script {
             name = "JavadocArtifact"
