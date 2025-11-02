@@ -37,7 +37,7 @@ object Build : BuildType({
     name = "Build"
 
     params {
-        param("git.commit.hash", "")
+        text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = true)
     }
 
     vcs {
