@@ -111,7 +111,7 @@ object Build : BuildType({
                 fi
                 
                 # Third case, first time of commit so no cache present, website available
-                if curl -sf %env.CACHE_MAP% -o tmp_release_notes.txt; then
+                if curl -sf %env.RELEASE_NOTES_URL% -o tmp_release_notes.txt; then
                   CHECKSUM=${'$'}(sha256sum tmp_release_notes.txt | awk '{print ${'$'}1}')
                   echo "Downloaded release notes, checksum: ${'$'}CHECKSUM"
                   jq --arg commit %git.commit.hash% --arg checksum "${'$'}CHECKSUM" '. + {(${'$'}commit): ${'$'}checksum}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
