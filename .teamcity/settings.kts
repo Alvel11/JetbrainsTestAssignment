@@ -61,7 +61,7 @@ object Build : BuildType({
         script {
             name = "JavadocArtifact"
             id = "JavadocArtifact"
-            scriptContent = "zip -r javadoc.zip target/dokkaJavadoc/"
+            scriptContent = "tar -czf javadoc.tar.gz -C target/dokkaJavadoc/"
         }
     }
 
