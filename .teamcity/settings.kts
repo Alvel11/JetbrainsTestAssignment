@@ -89,8 +89,8 @@ object Build : BuildType({
                 
                 jq --version
                 
-                mkdir -p cache
-                mkdir -p releases
+                mkdir -p cache releases
+                
                 
                 if [ ! -f %env.CACHE_MAP% ]; then
                   echo "{}" > %env.CACHE_MAP%
