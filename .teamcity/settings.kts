@@ -93,9 +93,18 @@ object Build : BuildType({
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
-                apt-get update
-                apt-get install -y jq
+                INSTALL_DIR="${'$'}HOME/bin"
+                mkdir -p "${'$'}INSTALL_DIR"
                 
+                
+                JQ_URL="https://github.com/stedolan/jq/releases/download/jq-1.8.1/jq-linux64"
+                curl -L -o "${'$'}INSTALL_DIR/jq" "${'$'}JQ_URL"
+                
+                chmod +x "${'$'}INSTALL_DIR/jq"
+                
+                export PATH="${'$'}INSTALL_DIR:${'$'}PATH"
+                
+                jq --version
                 
                 mkdir -p cache
                 if [ ! -f %env.CACHE_MAP% ]; then
