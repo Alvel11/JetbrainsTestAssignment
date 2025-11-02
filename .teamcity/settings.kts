@@ -36,6 +36,8 @@ project {
 object Build : BuildType({
     name = "Build"
 
+    artifactRules = "javadoc.tar.gz"
+
     params {
         text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = true)
     }
