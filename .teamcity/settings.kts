@@ -134,7 +134,10 @@ object Build : BuildType({
     dependencies {
         artifacts(RelativeId("Build")) {
             buildRule = lastSuccessful()
-            artifactRules = "cache/cache.json => cache/cache.json"
+            artifactRules = """
+                cache => cache
+                releases => releases
+            """.trimIndent()
         }
     }
 })
