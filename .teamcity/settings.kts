@@ -58,6 +58,11 @@ object Build : BuildType({
             id = "Javadoc"
             goals = "mvn dokka:javadoc"
         }
+        script {
+            name = "JavadocArtifact"
+            id = "JavadocArtifact"
+            scriptContent = "zip -r javadoc.zip target/dokkaJavadoc/"
+        }
     }
 
     triggers {
