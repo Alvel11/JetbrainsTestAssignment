@@ -21,7 +21,7 @@ changeBuildType(RelativeId("Build")) {
                 buildRule = lastSuccessful()
                 artifactRules = """
                     cache.json=>cache
-                    releases/**=>releases
+                    releases/*.txt=>releases
                 """.trimIndent()
             }
         }
