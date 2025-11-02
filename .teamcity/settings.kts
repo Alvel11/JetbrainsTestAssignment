@@ -98,7 +98,7 @@ object Build : BuildType({
                 if [ "${'$'}CACHED_REFERENCE" != "" ]; then
                   # First case, artifact was first generated when the marketing website was not reachable
                   # No release notes are added to artifact to ensure reproducibility
-                  if [ "${'$'}CACHED_REFERENCE" == "null" ]; then
+                  if [ "${'$'}CACHED_REFERENCE" = "null" ]; then
                     echo "Commit %git.commit.hash% found without release notes." 
                 
                   # Second case, artifact was already created and we have cached release notes for it
