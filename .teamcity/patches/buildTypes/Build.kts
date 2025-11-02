@@ -12,6 +12,18 @@ To apply the patch, change the buildType with id = 'Build'
 accordingly, and delete the patch script.
 */
 changeBuildType(RelativeId("Build")) {
+    check(artifactRules == """
+        cache/
+        releases/
+    """.trimIndent()) {
+        "Unexpected option value: artifactRules = $artifactRules"
+    }
+    artifactRules = """
+        cache/
+        releases/
+        release-artifact.tar.gz
+    """.trimIndent()
+
     expectSteps {
         script {
             name = "Checkout"
