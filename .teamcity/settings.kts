@@ -94,7 +94,7 @@ object Build : BuildType({
                   echo "{}" > %env.CACHE_MAP%
                 fi
                 
-                CACHED_REFERENCE=${'$'}(jq -r --arg commit "%git.commit.hash%" '.[${'$'}commit] // empty' "%env.CACHE_MAP%")
+                CACHED_REFERENCE=${'$'}(jq -r --arg commit "%git.commit.hash%" 'if has(${'$'}commit) then .[${'$'}commit] | tostring else empty end' "%env.CACHE_MAP%")
                 echo "Cached reference: ${'$'}CACHED_REFERENCE"
                 
                 if [ "${'$'}CACHED_REFERENCE" != "" ]; then
@@ -133,7 +133,6 @@ object Build : BuildType({
                 
                 tar --sort=name --mtime='1970-01-01' --owner=0 --group=0 --numeric-owner -czf release-artifact.tar.gz -C release-artifact .
             """.trimIndent()
-            param("teamcity.kubernetes.executor.pull.policy", "")
         }
     }
 
