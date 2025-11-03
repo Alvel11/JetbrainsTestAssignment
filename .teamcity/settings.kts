@@ -69,6 +69,9 @@ object Build : BuildType({
             id = "Checkout"
             scriptContent = """
                 git fetch --all
+                if ! git cat-file -e %git.commit.hash%^{commit}; then
+                    exit 1
+                fi
                 git checkout %git.commit.hash%
             """.trimIndent()
         }
