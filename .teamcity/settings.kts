@@ -151,8 +151,8 @@ object Build : BuildType({
         artifacts(RelativeId("Build")) {
             buildRule = lastSuccessful()
             artifactRules = """
-                ?cache.json=>cache
-                ?*.txt=>releases
+                ?:cache.json=>cache
+                ?:*.txt=>releases
             """.trimIndent()
         }
     }
