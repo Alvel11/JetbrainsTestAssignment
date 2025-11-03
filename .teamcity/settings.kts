@@ -44,7 +44,7 @@ object Build : BuildType({
     publishArtifacts = PublishMode.SUCCESSFUL
 
     params {
-        text("env.RELEASE_NOTES_URL", "http://nginx/release-notes-fail", readOnly = true, allowEmpty = true)
+        text("env.RELEASE_NOTES_URL", "http://nginx/release-notes-v2.txt", readOnly = true, allowEmpty = true)
         text("env.CACHE_MAP", "cache/cache.json", readOnly = true, allowEmpty = true)
         text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = true)
     }
