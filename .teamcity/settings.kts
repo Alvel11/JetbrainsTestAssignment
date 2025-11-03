@@ -44,9 +44,18 @@ object Build : BuildType({
     publishArtifacts = PublishMode.SUCCESSFUL
 
     params {
-        text("env.RELEASE_NOTES_URL", "http://nginx/release-notes-v2.txt", readOnly = true, allowEmpty = false)
+
         text("env.CACHE_MAP", "cache/cache.json", readOnly = true, allowEmpty = false)
         text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = false)
+        select("env.RELEASE_NOTES_URL",
+            display = ParameterDisplay.PROMPT,
+            value = "http://nginx/release-notes.txt",
+            options = listOf(
+                "http://nginx/release-notes.txt" to "http://nginx/release-notes.txt",
+                "http://nginx/release-notes-v2.txt" to "http://nginx/release-notes-v2.txt",
+                "http://nginx/release-notes-fail" to "http://nginx/release-notes-fail"
+            )
+        )
     }
 
     vcs {
