@@ -51,7 +51,6 @@ object Build : BuildType({
 
     vcs {
         root(DslContext.settingsRoot)
-
         cleanCheckout = true
     }
 
@@ -152,8 +151,8 @@ object Build : BuildType({
         artifacts(RelativeId("Build")) {
             buildRule = lastSuccessful()
             artifactRules = """
-                cache.json=>cache
-                *.txt=>releases
+                ?cache.json=>cache
+                ?*.txt=>releases
             """.trimIndent()
         }
     }

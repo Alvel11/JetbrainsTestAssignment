@@ -86,11 +86,14 @@ This will set up the agent, teamcity server and marketing server.
 
 Go to localhost:8111 and wait a bit until the server is ready.
 
+If prompted for choosing a database, choose the default one.
 Set up a user and password.
 
-Set up vcs settings with your forked repo and token. 
+Create a new project and set up vcs settings with your forked repo and token. 
 
-There is a single project with a single build, take a commit from your repo and run it with the commit as input.
+Agent always starts unauthorized, so go to the agents window and authorize the only one there is for the default pool.
+
+There is a single build, take a commit from your repo and run it with the commit as input.
 
 If you want to simulate the marketing page updating or being down, you can change the url on the properties or change the nginx config and redeploy it.
 
