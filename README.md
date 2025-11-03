@@ -95,3 +95,7 @@ Agent always starts unauthorized, so go to the agents window and authorize the o
 
 There is a single build, take a commit from your repo and run it with the commit as input. It will also prompt you to choose between three urls. THe first two work to simulate change, the third one doesnt work to simulate the marketing page being down.
 
+## Reproducibility
+
+To ensure reproducibility, for the packaged application, the recommendations for JVM on the reproduciblebuilds.org [page](https://maven.apache.org/guides/mini/guide-reproducible-builds.html) were followed; [Dokka](https://github.com/Kotlin/dokka), developed by Jetbrains, was used as a plugin for generating javadoc and [gnutar](https://www.gnu.org/software/tar/manual/html_section/Reproducibility.html) with the flags mentioned in their page was used for compression. 
+
