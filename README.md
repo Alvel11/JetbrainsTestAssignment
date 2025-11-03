@@ -93,7 +93,5 @@ Create a new project and set up vcs settings with your forked repo and token.
 
 Agent always starts unauthorized, so go to the agents window and authorize the only one there is for the default pool.
 
-There is a single build, take a commit from your repo and run it with the commit as input.
-
-If you want to simulate the marketing page updating or being down, you can change the url on the properties or change the nginx config and redeploy it.
+There is a single build, take a commit from your repo and run it with the commit as input. It will also prompt you to choose between three urls. THe first two work to simulate change, the third one doesnt work to simulate the marketing page being down.
 
