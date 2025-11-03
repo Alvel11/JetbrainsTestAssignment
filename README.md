@@ -58,10 +58,6 @@ flowchart TD
     Case3 --> End
     Case4 --> End
     
-    style Case1 fill:#FFE4B5
-    style Case2 fill:#90EE90
-    style Case3 fill:#87CEEB
-    style Case4 fill:#FFB6C6
 ```
 The json cache will look like this. Its objective is to save the least amount of release notes in the cache by tracking which commits use repeated ones.
 ```json
