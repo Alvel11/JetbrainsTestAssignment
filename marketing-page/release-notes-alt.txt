@@ -1,0 +1,8 @@
+1.0.2
+- Added release notes alt
+
+1.0.1
+- Added release notes
+
+1.0.0
+- Added application

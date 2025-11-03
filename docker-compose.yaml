@@ -6,6 +6,7 @@ services:
       - "8081:80"
     volumes:
       - ./marketing-page/release-notes.txt:/release-notes.txt:ro
+      - ./marketing-page/release-notes-alt.txt:/release-notes-alt.txt:ro
       - ./marketing-page/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   teamcity-server:
