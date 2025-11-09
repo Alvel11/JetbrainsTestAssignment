@@ -2,6 +2,7 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildFeatures.perfmon
 import jetbrains.buildServer.configs.kotlin.buildSteps.maven
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.triggers.finishBuildTrigger
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 
 /*
@@ -31,30 +32,19 @@ version = "2025.07"
 project {
 
     buildType(Build)
+    buildType(GetMarketingNotes)
 }
 
 object Build : BuildType({
-    name = "Build"
+    name = "Javadoc Build"
 
     artifactRules = """
-        release-artifact.tar.gz
+        target/dokkaJavadoc/ => target/dokkaJavadoc/
     """.trimIndent()
     publishArtifacts = PublishMode.SUCCESSFUL
 
     params {
-        text("env.MAX_RETRIES", "5", allowEmpty = false)
-        text("env.STARTING_BACKOFF", "1", allowEmpty = false)
         text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = false)
-        select("env.RELEASE_NOTES_URL",
-            display = ParameterDisplay.PROMPT,
-            value = "http://nginx/release-notes.txt",
-            options = listOf(
-                "http://nginx/release-notes.txt" to "http://nginx/release-notes.txt",
-                "http://nginx/release-notes-v2.txt" to "http://nginx/release-notes-v2.txt",
-                "http://nginx/release-notes-fail" to "http://nginx/release-notes-fail"
-            )
-        )
-
     }
 
     vcs {
@@ -80,6 +70,39 @@ object Build : BuildType({
             goals = "dokka:javadoc"
             runnerArgs = "-Dproject.build.outputTimestamp=1981-01-01T00:00:00Z"
         }
+    }
+
+    features {
+        perfmon {
+        }
+    }
+
+    dependencies {
+    }
+})
+
+object GetMarketingNotes : BuildType({
+    name = "Marketing Notes"
+
+    artifactRules = """
+        release-artifact.tar.gz
+    """.trimIndent()
+    publishArtifacts = PublishMode.SUCCESSFUL
+
+
+    vcs {
+        root(DslContext.settingsRoot)
+    }
+
+    params {
+        text("env.MAX_RETRIES", "5", allowEmpty = false)
+        text("env.STARTING_BACKOFF", "1", allowEmpty = false)
+        text("env.RELEASE_NOTES_URL",
+            value = "http://nginx/release-notes.txt",
+            )
+    }
+
+    steps {
         script {
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
@@ -87,16 +110,12 @@ object Build : BuildType({
                 #!/bin/bash
                 
                 BACKOFF=%env.STARTING_BACKOFF%
-                mkdir -p release-artifact
                 
                 for ((i=1; i<=%env.MAX_RETRIES%; i++)); do
                   if curl -sf %env.RELEASE_NOTES_URL% -o release_notes.txt; then
                     CHECKSUM=${'$'}(sha256sum release_notes.txt | awk '{print ${'$'}1}')
                     echo "Downloaded release notes, checksum: ${'$'}CHECKSUM"
                     mv release_notes.txt  release-artifact/
-                    
-                    # Move Javadoc to release artifact
-                    cp -r target/dokkaJavadoc/* release-artifact/
                     
                     tar --sort=name --mtime='1970-01-01' --owner=0 --group=0 --numeric-owner -cf - -C release-artifact . | gzip -n > release-artifact.tar.gz
                     exit 0
@@ -108,7 +127,7 @@ object Build : BuildType({
                   fi
                 done
                 
-                echo "##teamcity[message text='Marketing release notes download failed. Please try at a later date or a manual upload.' status='ERROR']"
+                echo "##teamcity[message text='Marketing release notes download failed. Please retry at a later date.' status='ERROR']"
                 exit 1
                 
                 
@@ -116,11 +135,23 @@ object Build : BuildType({
         }
     }
 
-    features {
-        perfmon {
+    dependencies {
+        snapshot(Build) {
+            onDependencyFailure = FailureAction.FAIL_TO_START
+        }
+
+        artifacts(Build) {
+            cleanDestination = true
+            artifactRules = """
+                target/dokkaJavadoc/ => release-artifact/
+            """.trimIndent()
         }
     }
 
-    dependencies {
+    triggers {
+        finishBuildTrigger {
+            buildType = "${Build.id}"
+            successfulOnly = true
+        }
     }
 })
