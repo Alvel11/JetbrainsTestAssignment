@@ -44,6 +44,7 @@ object Build : BuildType({
     params {
         text("env.MAX_RETRIES", "5", allowEmpty = false)
         text("env.STARTING_BACKOFF", "1", allowEmpty = false)
+        text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = false)
         select("env.RELEASE_NOTES_URL",
             display = ParameterDisplay.PROMPT,
             value = "http://nginx/release-notes.txt",
