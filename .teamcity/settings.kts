@@ -84,6 +84,7 @@ object Build : BuildType({
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
+                #!/bin/bash
                 
                 BACKOFF=%env.STARTING_BACKOFF%
                 mkdir -p release-artifact
@@ -98,12 +99,14 @@ object Build : BuildType({
                     cp -r target/dokkaJavadoc/* release-artifact/
                     
                     tar --sort=name --mtime='1970-01-01' --owner=0 --group=0 --numeric-owner -cf - -C release-artifact . | gzip -n > release-artifact.tar.gz
+                    exit 0
                 
                   else
                     echo "Website unavailable, retrying in ${'$'}BACKOFF seconds"
-                    BACKOFF=BACKOFF*2
+                    BACKOFF=${'$'}((BACKOFF * 2))
+                    sleep ${'$'}BACKOFF
                   fi
-                fi
+                done
                 
                 echo "##teamcity[message text='Marketing release notes download failed. Please try at a later date or a manual upload.' status='ERROR']"
                 exit 1
@@ -119,7 +122,5 @@ object Build : BuildType({
     }
 
     dependencies {
-        artifacts(RelativeId("Build")) {
-        }
     }
 })
