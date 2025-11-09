@@ -37,16 +37,13 @@ object Build : BuildType({
     name = "Build"
 
     artifactRules = """
-        cache/
-        releases/
         release-artifact.tar.gz
     """.trimIndent()
     publishArtifacts = PublishMode.SUCCESSFUL
 
     params {
-
-        text("env.CACHE_MAP", "cache/cache.json", readOnly = true, allowEmpty = false)
-        text("git.commit.hash", "", display = ParameterDisplay.PROMPT, allowEmpty = false)
+        text("env.MAX_RETRIES", "5", allowEmpty = false)
+        text("env.STARTING_BACKOFF", "1", allowEmpty = false)
         select("env.RELEASE_NOTES_URL",
             display = ParameterDisplay.PROMPT,
             value = "http://nginx/release-notes.txt",
@@ -56,6 +53,7 @@ object Build : BuildType({
                 "http://nginx/release-notes-fail" to "http://nginx/release-notes-fail"
             )
         )
+
     }
 
     vcs {
@@ -85,65 +83,30 @@ object Build : BuildType({
             name = "DownloadReleaseNotes"
             id = "DownloadReleaseNotes"
             scriptContent = """
-                INSTALL_DIR="${'$'}HOME/bin"
-                mkdir -p "${'$'}INSTALL_DIR"
                 
+                BACKOFF=%env.STARTING_BACKOFF%
+                mkdir -p release-artifact
                 
-                JQ_URL="https://github.com/stedolan/jq/releases/download/jq-1.8.1/jq-linux64"
-                curl -L -o "${'$'}INSTALL_DIR/jq" "${'$'}JQ_URL"
-                
-                chmod +x "${'$'}INSTALL_DIR/jq"
-                
-                export PATH="${'$'}INSTALL_DIR:${'$'}PATH"
-                
-                jq --version
-                
-                mkdir -p cache releases release-artifact
-                
-                
-                if [ ! -f %env.CACHE_MAP% ]; then
-                  echo "Cache not found"
-                  echo "{}" > %env.CACHE_MAP%
-                fi
-                
-                CACHED_REFERENCE=${'$'}(jq -r --arg commit "%git.commit.hash%" 'if has(${'$'}commit) then .[${'$'}commit] | tostring else empty end' "%env.CACHE_MAP%")
-                echo "Cached reference: ${'$'}CACHED_REFERENCE"
-                
-                if [ "${'$'}CACHED_REFERENCE" != "" ]; then
-                  # First case, artifact was first generated when the marketing website was not reachable
-                  # No release notes are added to artifact to ensure reproducibility
-                  if [ "${'$'}CACHED_REFERENCE" = "null" ]; then
-                    echo "Commit %git.commit.hash% found without release notes." 
-                
-                  # Second case, artifact was already created and we have cached release notes for it
-                  else
-                    echo "Commit %git.commit.hash% found in cache, checksum: ${'$'}CACHED_REFERENCE"
-                    cp releases/${'$'}CACHED_REFERENCE.txt release-artifact/
-                    
-                  fi
-                  
-                else
-                  # Third case, first time of commit so no cache present, website available
-                  if curl -sf %env.RELEASE_NOTES_URL% -o tmp_release_notes.txt; then
-                    CHECKSUM=${'$'}(sha256sum tmp_release_notes.txt | awk '{print ${'$'}1}')
+                for ((i=1; i<=%env.MAX_RETRIES%; i++)); do
+                  if curl -sf %env.RELEASE_NOTES_URL% -o release_notes.txt; then
+                    CHECKSUM=${'$'}(sha256sum release_notes.txt | awk '{print ${'$'}1}')
                     echo "Downloaded release notes, checksum: ${'$'}CHECKSUM"
-                    jq --arg commit %git.commit.hash% --arg checksum "${'$'}CHECKSUM" '. + {(${'$'}commit): ${'$'}checksum}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
-                    cp tmp_release_notes.txt "releases/${'$'}CHECKSUM.txt"
-                    cp releases/${'$'}CHECKSUM.txt release-artifact/
+                    mv release_notes.txt  release-artifact/
+                    
+                    # Move Javadoc to release artifact
+                    cp -r target/dokkaJavadoc/* release-artifact/
+                    
+                    tar --sort=name --mtime='1970-01-01' --owner=0 --group=0 --numeric-owner -cf - -C release-artifact . | gzip -n > release-artifact.tar.gz
                 
-                  # Fourth case, first time commit, website not available
                   else
-                    echo "Website unavailable, storing null in cache"
-                    jq --arg commit %git.commit.hash% '. + {(${'$'}commit): null}' %env.CACHE_MAP% > "%env.CACHE_MAP%.tmp" && mv "%env.CACHE_MAP%.tmp" %env.CACHE_MAP%
+                    echo "Website unavailable, retrying in ${'$'}BACKOFF seconds"
+                    BACKOFF=BACKOFF*2
                   fi
                 fi
                 
+                echo "##teamcity[message text='Marketing release notes download failed. Please try at a later date or a manual upload.' status='ERROR']"
+                exit 1
                 
-                # Move Javadoc to release artifact
-                
-                cp -r target/dokkaJavadoc/* release-artifact/
-                
-                tar --sort=name --mtime='1970-01-01' --owner=0 --group=0 --numeric-owner -cf - -C release-artifact . | gzip -n > release-artifact.tar.gz
                 
             """.trimIndent()
         }
@@ -156,11 +119,6 @@ object Build : BuildType({
 
     dependencies {
         artifacts(RelativeId("Build")) {
-            buildRule = lastSuccessful()
-            artifactRules = """
-                ?:cache.json=>cache
-                ?:*.txt=>releases
-            """.trimIndent()
         }
     }
 })
