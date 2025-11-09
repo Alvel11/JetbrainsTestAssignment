@@ -23,58 +23,33 @@ Three containers are defined here.
 2. The teamcity agent which will be running the builds
 3. The teamcity server with volumes pointing to local folders. 
 
-## Teamcity pipeline
+## Teamcity pipelines
 
-The objective of the pipeline is to produce a release artifact including the release notes and the javadoc. This release artifact can be seen in the artifact rules along with two more artifacts which will be used later.
-cache/
-releases/
+The objective of the pipelines is to produce a release artifact including the release notes and the javadoc. On a two-step procedure, with one build generating the javadoc and the other downloading the release notes and making the artifact.  This release artifact can be seen in the artifact rules
 release-artifact.tar.gz
 
 Starting from the inputs, the only required is a commit hash of the repository. This commit will be used for several steps on the line.
 
-The pipeline starts by checking out on the provided commit while failing automatically if there is no commit that matches it.
+The first build starts by checking out on the provided commit while failing automatically if there is no commit that matches it.
 
 It then continues by running mvn dokka:Javadoc, which will create a dokkaJavadoc folder on the target folder with all the files required for showing it.
 
-The third step downloads the release notes and makes the release artifact with the javadoc available, in detail:
-1. It starts by downloading jq and adding it to the path. Of course a new image with the agent and jq could have been made, but I thought that making an extra step for the setup was not worth it. 
-2. It will decide how to handle the artifact based on the following logic:
+The second build downloads the release notes and makes the release artifact with the javadoc available, in detail:
 
 ```mermaid
 flowchart TD
-    Start([Start]) --> CheckCache{Is this github hash present cache.json?}
+    Start([Start]) --> TryDownload{Is the marketing website available for downloading release notes?}
     
-    CheckCache -->|Yes| CheckNull{Is it 'null'?}
-    CheckCache -->|No| TryDownload{Try to download release notes from marketing. Was download successful?}
+    TryDownload -->|Yes| Download{Download notes and generate release artifact}
+    TryDownload -->|No| ExponentialBackoff{Did the marketing website came back online during the exponential backoff?}
     
-    CheckNull -->|Yes| Case1[When this has was first used website was down, so dont add release notes here]
-    CheckNull -->|No| Case2[Look for cached released notes in releases/ with the checksum of the value in the cache.json and add them to release artefact]
+    ExponentialBackoff -->|Yes| Download{Download notes and generate release artifact}
+    ExponentialBackoff -->|No| Postpone{Stop the pipeline for now so the agent is available and give the user the option to continue trying by rerunning this build}
     
-    TryDownload -->|Yes| Case3[Add downloaded notes to release artefact, cache hash->checksum reference, cache maketing notes content in releases/checksum.txt ]
-    TryDownload -->|No| Case4[Dont add release notes to release artefact, cache hash->null]
-    
-    Case1 --> End([End])
-    Case2 --> End
-    Case3 --> End
-    Case4 --> End
+    Download --> End([End])
+    Postpone --> End
     
 ```
-The json cache will look like this. Its objective is to save the least amount of release notes in the cache by tracking which commits use repeated ones.
-```json
-{
-"e57fec4385daa6bebc5bb5b38862eb114ae55bc8": "92a4ad08c9040b2a9b12cc9f3d2adf82a0ab8c7ec7e3215db9b4b5d47c110e75",
-"aae38e68d2a1a67a972f08036dd61ebe6b477b9c": "92a4ad08c9040b2a9b12cc9f3d2adf82a0ab8c7ec7e3215db9b4b5d47c110e75",
-"774c256767a0b59d678b3278191d085d249972ce": "test",
-"e82cf67bbd4d707643a709c27a2ff0610292a097": null
-}
-```
-
-The releases/ folder will look like this 
-
-92a4ad08c9040b2a9b12cc9f3d2adf82a0ab8c7ec7e3215db9b4b5d47c110e75.txt
-
-test.txt
-
 
 ## Quick Start
 
@@ -93,7 +68,9 @@ Create a new project and set up vcs settings with your forked repo and token.
 
 Agent always starts unauthorized, so go to the agents window and authorize the only one there is for the default pool.
 
-There is a single build, take a commit from your repo and run it with the commit as input. It will also prompt you to choose between three urls. THe first two work to simulate change, the third one doesnt work to simulate the marketing page being down.
+There is a single build, take a commit from your repo and run it with the commit as input. You can choose the urls on the parameters. The first two work to simulate change, the third one doesnt work to simulate the marketing page being down.
+
+If trying with the third one, you can rerun the second build with a correct url to simulate the marketing website being back online. 
 
 ## Reproducibility
 
